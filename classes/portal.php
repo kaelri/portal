@@ -38,7 +38,7 @@ class Portal {
 			
 		}
 		
-		if ( empty($input) ) {
+		if ( empty($new_data) ) {
 			return new WP_Error('bad-data', __FUNCTION__ . ' received bad data. Provide either an array of key-value pairs, or two arguments for $key and $value.');
 		}
 
