@@ -6,7 +6,7 @@
 
 Portal = (function(){
 
-	var data = portalInitialData;
+	var data = portalInitialData.data;
 	
 	function getData( key ){
 
@@ -61,7 +61,7 @@ PortalCall = function( config ) {
 			timeout:  this.timeout,
 			dataType: 'json',
 			complete: function( xhr, textStatus ) {
-				
+
 				// Save raw data from jQuery.
 				self.xhr      = xhr;
 				self.response = xhr.responseJSON || {};
@@ -111,3 +111,6 @@ PortalCall = function( config ) {
 	return this;
 
 }
+
+// VUE EVENT BUS
+Vue.prototype.$portal = new Vue();

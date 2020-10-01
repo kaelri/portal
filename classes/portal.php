@@ -96,7 +96,7 @@ class Portal {
 			self::$data[ 'restURL' ] = home_url('/wp-json/');
 		}
 
-		wp_localize_script( 'portal', 'portalInitialData', self::$data );
+		wp_localize_script( 'portal', 'portalInitialData', [ 'data' => self::$data ] );
 
 	}
 
