@@ -1,83 +1,79 @@
-jQuery(document).ready(function(){
+portalExample = new Vue({
+	
+	el: '#portal-example',
 
-	portalExample = new Vue({
-		
-		el: '#portal-example',
+	data: {
+		myInput: '',
+	},
 
-		data: {
-			myInput: '',
-		},
+	template: `<form id="portal-example" class="form-inline" v-on:submit.native.prevent="ping()">
 
-		template: `<form id="portal-example" class="form-inline" v-on:submit.native.prevent="ping()">
+		<div class="form-row">
 
-			<div class="form-row">
+			<div class="col">
 
-				<div class="col">
+				<input v-model="myInput" class="form-control mb-2">
 
-					<input v-model="myInput" class="form-control mb-2">
+				<button v-on:click.prevent="callPing" class="btn btn-primary mb-2">Ping</button>
 
-					<button v-on:click.prevent="callPing" class="btn btn-primary mb-2">Ping</button>
-
-					<button v-on:click.prevent="callError" class="btn btn-secondary mb-2">Error</button>
-
-				</div>
+				<button v-on:click.prevent="callError" class="btn btn-secondary mb-2">Error</button>
 
 			</div>
 
-		</form>`,
+		</div>
 
-		methods: {
+	</form>`,
 
-			// CALL: PING
-			callPing: function() {
+	methods: {
 
-				var body = {
-					myInput: this.myInput,
-					testData: { 
-						aString: 'Zephyrs and stuff.',
-						anInt: 17,
-						aFloat: 3.59,
-						anArray: [
-							1,
-							2,
-							4,
-							'Excellent',
-							{
-								alpha: 'beta',
-								gamma: 'delta',
-								epsilon: 9,
-							}
-						]
-					}
+		// CALL: PING
+		callPing: function() {
+
+			var body = {
+				myInput: this.myInput,
+				testData: { 
+					aString: 'Zephyrs and stuff.',
+					anInt: 17,
+					aFloat: 3.59,
+					anArray: [
+						1,
+						2,
+						4,
+						'Excellent',
+						{
+							alpha: 'beta',
+							gamma: 'delta',
+							epsilon: 9,
+						}
+					]
 				}
+			}
 
-				console.log( 'sent: ', body );
-				
-				var call = new PortalCall({
-					method:   'portal/v1/ping',
-					body:     body,
-					callback: this.callback
-				}).send();
+			console.log( 'sent: ', body );
+			
+			var call = new PortalCall({
+				endpoint: 'portal/v1/ping',
+				body:     body,
+				callback: this.callback
+			}).send();
 
-			},
+		},
 
-			// CALL: ERROR
-			callError: function() {
+		// CALL: ERROR
+		callError: function() {
 
-				var call = new PortalCall({
-					method:   'portal/v1/error',
-					callback: this.callback
-				}).send();
+			var call = new PortalCall({
+				endpoint: 'portal/v1/error',
+				callback: this.callback
+			}).send();
 
-			},
+		},
 
-			callback: function( call ) {
-				window.alert( call.message );
-				console.log( 'received: ', call );
-			},
+		callback: function( call ) {
+			window.alert( call.message );
+			console.log( 'received: ', call );
+		},
 
-		}
-
-	});
+	}
 
 });

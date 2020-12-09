@@ -7,7 +7,7 @@
 Portal = (function(){
 
 	var data = portalInitialData.data;
-	
+
 	function getData( key ){
 
 		if ( !key ) return data;
@@ -29,23 +29,24 @@ PortalCall = function( config ) {
 
 	// CONFIG
 	this.url          = config.url      || Portal.getData('restURL');
-	this.method       = config.method   || '';
+	this.endpoint     = config.endpoint || '';
+	this.method       = config.method   || 'GET';
 	this.body         = config.body     || null;
+	this.format       = config.format   || 'json';
 	this.callback     = config.callback || false;
 	this.silent       = config.silent   || false;
 	this.timeout      = config.timeout  || 300000;
 
 	// RESULTS
 	this.sent         = false;
-	this.success      = null;
 	this.status       = null;
 	this.code         = null;
 	this.message      = null;
 	this.data         = {};
-	
+
 	// RAW
+	this.request      = null;
 	this.response     = null;
-	this.xhr          = null;
 
 	this.send = function() {
 
@@ -55,39 +56,48 @@ PortalCall = function( config ) {
 
 		if ( !this.silent ) this.showLoading();
 
-		var settings = {
-			type:     'GET',
-			url:      this.url + this.method,
-			timeout:  this.timeout,
-			dataType: 'json',
-			complete: function( xhr, textStatus ) {
-
-				// Save raw data from jQuery.
-				self.xhr      = xhr;
-				self.response = xhr.responseJSON || {};
-				
-				// Use status info from WP response object, if available. Else, default to info from jQuery.
-				self.success  = ( textStatus == 'success' ); // simple true-or-false check for a successful call. If not successful, look at "status" and "code" for more detailed diagnostics.
-				self.status   = self.response.status  || xhr.status;
-				self.code     = self.response.code    || textStatus; // "success", "notmodified", "nocontent", "error", "timeout", "abort", or "parsererror"
-				self.message  = self.response.message || xhr.statusText;
-				self.data     = self.response.data    || {};
-
-				if ( !self.silent ) self.hideLoading();
-
-				if ( self.callback ) self.callback( self );
-
-			},
+		// Switch method from GET to POST if body data is present.
+		if ( this.method == 'GET' && this.body !== null ) {
+			this.method = 'POST';
 		}
 
-		// Switch to POST method automatically if body data is present.
-		if ( this.body ) {
-			settings.type    = 'POST';
-			settings.headers = { 'Content-Type': 'application/json' };
-			settings.data    = JSON.stringify( this.body );
+		this.request = new XMLHttpRequest();
+		this.request.open( this.method, this.url + this.endpoint );
+		this.request.timeout = this.timeout;
+		this.request.responseType = this.format;
+
+		let body = null; // default
+
+		switch ( this.format ) {
+
+			case 'json':
+
+				this.request.setRequestHeader( 'Content-Type', 'application/json' );
+
+				// Convert body data, if any, into JSON.
+				if ( this.body !== null ) body = JSON.stringify( this.body );
+
+				break;
+
+			default:
+
+				body = this.body;
+
+				break;
+
 		}
+
 		
-		jQuery.ajax( settings );
+		
+		this.request.onreadystatechange = function() {
+			self.receive();
+		};
+
+		this.request.ontimeout = function() {
+			self.timeout();
+		};
+
+		this.request.send( body );
 
 		this.sent = true;
 		return      true;
@@ -96,21 +106,66 @@ PortalCall = function( config ) {
 
 	// Require explicit command to re-send a call that has already been sent.
 	this.resend = function() {
+
 		this.sent = false;
-		this.send();
+
+		return this.send();
+
+	}
+
+	this.receive = function() {
+
+		if ( this.request.readyState != 4 ) return;
+
+		this.status   = this.request.status;
+		this.message  = this.request.statusText;
+		this.response = this.request.response;
+
+		// Determine status code. Analogous on jQuery.ajax text status codes. https://api.jquery.com/jQuery.ajax/
+		if ( this.format == 'json' && this.response && this.response.code ) {
+			this.code = this.response.code;
+		} else if ( this.status === 204 ) {
+			this.code = 'nocontent';
+		} else if ( this.status === 304 ) {
+			this.code = 'notmodified';
+		} else if ( this.status >= 200 && this.status < 300 ) {
+			this.code = 'success';
+		} else {
+			this.code = 'error';
+		}
+
+		if ( !this.silent ) this.hideLoading();
+
+		if ( this.callback ) this.callback( this );
+
+	}
+
+	this.timeout = function() {
+
+		this.code = 'timeout';
+
+		if ( !this.silent ) this.hideLoading();
+
+		if ( this.callback ) this.callback( this );
+
+	}
+
+	this.abort = function() {
+
+		this.request.abort();
+
+		this.code = 'abort';
+
 	}
 
 	this.showLoading = function() {
-		jQuery('body').addClass('portal-is-loading');
+		document.body.classList.add('portal-is-loading');
 	}
 
 	this.hideLoading = function() {
-		jQuery('body').removeClass('portal-is-loading');
+		document.body.classList.remove('portal-is-loading');
 	}
 
 	return this;
 
 }
-
-// VUE EVENT BUS
-Vue.prototype.$portal = new Vue();

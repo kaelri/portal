@@ -90,7 +90,7 @@ class Portal {
 
 		$timestamp = filemtime( self::$plugin_path . 'js/portal.js' );
 
-		wp_enqueue_script( 'portal', self::$plugin_url . 'js/portal.js', ['jquery'], $timestamp );
+		wp_enqueue_script( 'portal', self::$plugin_url . 'js/portal.js', [], $timestamp );
 
 		if ( !array_key_exists( 'restURL', self::$data ) ) {
 			self::$data[ 'restURL' ] = home_url('/wp-json/');

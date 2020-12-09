@@ -11,7 +11,7 @@
 	function portal_example_scripts() {
 
 		// App
-		wp_enqueue_script( 'portal-example', plugin_dir_url( __FILE__ ) . 'example.js', ['jquery', 'portal', 'vue'] );
+		wp_enqueue_script( 'portal-example', plugin_dir_url( __FILE__ ) . 'example.js', ['portal', 'vue'] );
 
 	}
 
